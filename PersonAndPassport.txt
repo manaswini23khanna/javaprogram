@@ -1,0 +1,225 @@
+Hibernate.cfg.xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-configuration PUBLIC
+"-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+<session-factory>
+<!-- Database connection settings -->
+<property name="hibernate.connection.driver_class">com.mysql.cj.jdbc.Driver</property>
+<property name="hibernate.connection.url">jdbc:mysql://localhost:3306/HibernateApplication</property>
+<property name="hibernate.connection.username">root</property>
+<property name="hibernate.connection.password">Chikki@14</property>
+<property name="hibernate.current_session_context_class">thread</property>
+
+<!-- JDBC connection pool settings -->
+<property name="hibernate.c3p0.min_size">5</property>
+<property name="hibernate.c3p0.max_size">20</property>
+
+<!-- Other Hibernate properties -->
+<property name="hibernate.dialect">org.hibernate.dialect.MySQL8Dialect</property>
+<property name="hibernate.show_sql">true</property>
+<property name="hibernate.hbm2ddl.auto">create</property>
+<mapping class="com.example.Person"></mapping>
+<mapping class="com.example.Passport"></mapping>
+
+</session-factory>
+</hibernate-configuration>
+
+
+Person.java
+
+package com.example;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+
+@Entity
+@Table(name="person")
+public class Person
+{
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@Column(name="person_id")
+	private int id;
+	
+	@Column(name="person_Name")
+	private String name;
+	
+	@OneToOne(mappedBy="person",cascade=CascadeType.ALL)
+	private Passport passport;
+	
+	public int getId()
+	{
+		return id;
+	}
+	public void setId(int id)
+	{
+		this.id = id;
+	}
+	public String getName()
+	{
+		return name;
+	}
+	public void setName(String name)
+	{
+		this.name = name;
+	}
+	public Passport getPassport()
+	{
+		return passport;
+	}
+	public void setPassport(Passport passport)
+	{
+		this.passport = passport;
+	}
+	public Person(int id, String firstname, Passport passport)
+	{
+		super();
+		this.id = id;
+		this.name = name;
+		this.passport = passport;
+	}
+	public Person() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+
+}
+
+
+Passport.java
+
+package com.example;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+
+@Entity
+@Table(name="passport")
+public class Passport
+{
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@Column(name="passport_id")
+	private int id;
+	
+	@Column(name="passport_number")
+	private String passportnumber;
+	
+	@OneToOne
+	@JoinColumn(name="person_id")
+	private Person person;
+	
+	public int getId()
+	{
+		return id;
+	}
+	public void setId(int id)
+	{
+		this.id = id;
+	}
+	public String getPassportnumber()
+	{
+		return passportnumber;
+	}
+	public void setPassportnumber(String passportnumber)
+	{
+		this.passportnumber = passportnumber;
+	}
+	public Person getPerson()
+	{
+		return person;
+	}
+	public void setPerson(Person person)
+	{
+		this.person = person;
+	}
+	public Passport(int id, String passportnumber, Person person)
+	{
+		super();
+		this.id = id;
+		this.passportnumber =passportnumber;
+		this.person = person;
+	}
+	public Passport()
+	{
+		super();
+		// TODO Auto-generated constructor stub
+	}
+
+}
+
+
+App.java
+
+package com.anpfrnds;
+
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+
+import com.example.Passport;
+import com.example.Person;
+
+/**
+ * Hello world!
+ *
+ */
+public class App 
+{
+    public static void main( String[] args )
+    {
+    	
+        Configuration cfg=new Configuration();
+        cfg.configure("hibernate.cfg.xml");
+        SessionFactory factory=cfg.buildSessionFactory();
+        Session session=factory.openSession();
+        try 
+        {
+        	Person p1=new Person();
+        	p1.setName("Rohit");
+        	
+        	Passport pn=new Passport();
+        	pn.setPassportnumber("AB1245787");
+        	
+        	p1.setPassport(pn);
+        	pn.setPerson(p1);
+        	
+        	session.beginTransaction();
+        	session.save(p1);
+        	session.getTransaction().commit();
+        	
+        	Person a1=session.get(Person.class, p1.getId());
+        	Passport a2=a1.getPassport();
+        	
+        	System.out.println("Person name: "+a1.getName());
+        	System.out.println("Passport number: "+a2.getPassportnumber());
+        	
+        	
+        }
+        catch(Exception e)
+        {
+        	e.printStackTrace();
+        }
+        finally 
+        {
+        	session.close();
+        	factory.close();
+        }
+    }
+}
